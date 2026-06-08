@@ -216,9 +216,9 @@ function renderRpts(){
     l.innerHTML=reports.map((r,i)=>{
         const t=new Date(r.timestamp).toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
         const sk='https://mc-heads.net/avatar/'+encodeURIComponent(r.playerName)+'/32';
-        return '<div class="rpt'+(r.handled?' done':'')+'" onclick="copyNick(\\''+esc(r.playerName)+'\\',this)">'+
+        return '<div class="rpt'+(r.handled?' done':'')+'" onclick="copyNick(\''+esc(r.playerName)+'\',this)">'+
             '<div class="copy-toast">Скопировано!</div>'+
-            '<div class="pr"><img class="av" src="'+sk+'" alt="" onerror="this.style.display=\\'none\\'">'+
+            '<div class="pr"><img class="av" src="'+sk+'" alt="" onerror="this.style.display=\'none\'">'+
             '<div><div class="pn">'+esc(r.playerName)+'</div><div class="rt">'+t+'</div></div></div>'+
             '<div class="rm">'+r.playerMessage+'</div></div>';
     }).join('');
@@ -264,7 +264,7 @@ function renderHist(){
         else if(h.action&&h.action.includes('BAN_93'))bc='ad';
         else if(h.action&&h.action.includes('podstrekanie'))bc='incite';
         return '<div class="hist-item">'+
-            '<img class="hist-av" src="'+sk+'" alt="" onerror="this.style.display=\\'none\\'">'+
+            '<img class="hist-av" src="'+sk+'" alt="" onerror="this.style.display=\'none\'">'+
             '<div class="hist-info"><div class="hist-top"><span class="hist-pn">'+esc(h.playerName)+'</span>'+
             '<span class="hist-badge '+bc+'">'+esc(bl)+'</span></div>'+
             '<div class="hist-msg">'+h.playerMessage+'</div>'+
