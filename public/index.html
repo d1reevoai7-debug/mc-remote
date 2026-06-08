@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no,maximum-scale=1">
+<title>MC Remote</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{--bg:#0a0e17;--bg2:#111827;--card:#1a2332;--card2:#151d2b;--brd:rgba(255,255,255,0.05);--g:#22c55e;--b:#3b82f6;--r:#ef4444;--o:#f97316;--y:#eab308;--p:#a855f7;--t:#f1f5f9;--t2:#94a3b8;--t3:#475569}
+body{font-family:'Inter',-apple-system,sans-serif;background:var(--bg);color:var(--t);min-height:100vh;min-height:100dvh;-webkit-font-smoothing:antialiased;overflow-x:hidden;padding-bottom:64px}
+
+/* Header */
+.hdr{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:var(--bg2);border-bottom:1px solid var(--brd);position:sticky;top:0;z-index:100}
+@supports(padding:env(safe-area-inset-top)){.hdr{padding-top:calc(12px + env(safe-area-inset-top))}}
+.hdr-l{display:flex;align-items:center;gap:10px}
+.logo{width:30px;height:30px;background:linear-gradient(135deg,var(--g),#059669);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:15px;box-shadow:0 0 16px rgba(34,197,94,0.2)}
+.hdr h1{font-size:15px;font-weight:700}
+.hdr .sub{font-size:10px;color:var(--t2);font-weight:500}
+#modCount{display:none; font-size:11px; margin-left:8px; padding:3px 8px; background:rgba(255,255,255,0.1); border-radius:8px; color:var(--t2);}
+.st{display:flex;align-items:center;gap:4px;font-size:10px;font-weight:600;color:var(--r);padding:3px 8px;background:rgba(239,68,68,0.1);border-radius:10px}
+.st.on{color:var(--g);background:rgba(34,197,94,0.1)}
+.st-d{width:5px;height:5px;border-radius:50%;background:currentColor}
+.st.on .st-d{animation:bk 2s infinite}
+@keyframes bk{50%{opacity:.4}}
+
+/* Toggle */
+.tgl{display:flex;align-items:center;justify-content:space-between;margin:10px 12px 0;padding:10px 14px;background:var(--card);border:1px solid var(--brd);border-radius:12px}
+.tgl-l{font-size:12px;font-weight:600;color:var(--t2)}.tgl-l span{color:var(--t)}
+.tgl-s{position:relative;width:46px;height:24px;background:#334155;border-radius:12px;cursor:pointer;border:none;padding:0;transition:background .2s}
+.tgl-s.on{background:var(--g)}
+.tgl-s::after{content:'';position:absolute;top:2px;left:2px;width:20px;height:20px;background:#fff;border-radius:50%;transition:transform .2s;box-shadow:0 1px 3px rgba(0,0,0,.3)}
+.tgl-s.on::after{transform:translateX(22px)}
+
+/* Tabs content */
+.tab-content{display:none;padding:10px 12px}
+.tab-content.active{display:block}
+.sec-t{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:var(--t3);margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.badge{background:var(--o);color:#fff;font-size:9px;font-weight:700;padding:1px 6px;border-radius:7px;min-width:16px;text-align:center}
+
+/* Report card */
+.rpt{background:var(--card);border:1px solid var(--brd);border-radius:14px;padding:12px 14px;animation:ci .3s ease;cursor:pointer;transition:opacity .2s}
+.rpt+.rpt{margin-top:6px}
+.rpt.done{opacity:.3}
+@keyframes ci{from{transform:translateY(-6px);opacity:0}to{transform:translateY(0);opacity:1}}
+.rpt .pr{display:flex;align-items:center;gap:10px;margin-bottom:6px}
+.av{width:32px;height:32px;border-radius:5px;image-rendering:pixelated;background:#334155;flex-shrink:0}
+.pn{font-size:14px;font-weight:700;color:var(--t)}
+.rt{font-size:10px;color:var(--t3);font-weight:500}
+.rm{font-size:13px;font-weight:500;color:var(--t2);line-height:1.4;word-break:break-word;padding:8px 10px;background:rgba(0,0,0,.2);border-radius:8px;border-left:3px solid var(--o)}
+.copy-toast{position:absolute;top:8px;right:12px;font-size:10px;color:var(--g);font-weight:600;opacity:0;transition:opacity .2s}
+.copy-toast.show{opacity:1}
+.rpt{position:relative}
+
+.rpts{max-height:280px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--card) transparent}
+.no-r{text-align:center;padding:28px 16px;color:var(--t3);font-size:12px}
+.no-r-i{font-size:28px;margin-bottom:6px;opacity:.5}
+
+/* Action buttons */
+.acts{margin-top:12px}
+.acts-g{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+.ab{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:20px 10px;border:none;border-radius:14px;cursor:pointer;font-family:'Inter',sans-serif;color:#fff;position:relative;overflow:hidden;user-select:none;-webkit-user-select:none;touch-action:manipulation;transition:transform .1s}
+.ab:active{transform:scale(.92)}
+.ab .ic{font-size:24px;line-height:1}.ab .lb{font-size:13px;font-weight:700}.ab .sl{font-size:10px;font-weight:500;opacity:.7}
+.ab::before{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(255,255,255,.1) 0%,transparent 40%);border-radius:14px;pointer-events:none}
+.b1{background:linear-gradient(160deg,#22c55e,#16a34a);box-shadow:0 4px 16px rgba(34,197,94,.3)}
+.b2{background:linear-gradient(160deg,#3b82f6,#2563eb);box-shadow:0 4px 16px rgba(59,130,246,.3)}
+.b3{background:linear-gradient(160deg,#ef4444,#dc2626);box-shadow:0 4px 16px rgba(239,68,68,.3)}
+.b4{background:linear-gradient(160deg,#f97316,#ea580c);box-shadow:0 4px 16px rgba(249,115,22,.3)}
+
+/* Ripple */
+.rip{position:absolute;border-radius:50%;background:rgba(255,255,255,.2);transform:scale(0);animation:rp .5s ease-out;pointer-events:none}
+@keyframes rp{to{transform:scale(3.5);opacity:0}}
+
+/* Bottom nav */
+.bnav{position:fixed;bottom:0;left:0;right:0;display:flex;background:var(--bg2);border-top:1px solid var(--brd);z-index:100}
+@supports(padding:env(safe-area-inset-bottom)){.bnav{padding-bottom:env(safe-area-inset-bottom)}}
+.bnav button{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 4px;border:none;background:none;color:var(--t3);font-family:'Inter',sans-serif;font-size:10px;font-weight:600;cursor:pointer;transition:color .2s}
+.bnav button.active{color:var(--g)}
+.bnav button .ni{font-size:20px;line-height:1}
+
+/* History tab */
+.hist-item{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;background:var(--card);border:1px solid var(--brd);border-radius:12px;margin-bottom:6px}
+.hist-av{width:28px;height:28px;border-radius:4px;image-rendering:pixelated;background:#334155;flex-shrink:0;margin-top:2px}
+.hist-info{flex:1;min-width:0}
+.hist-top{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:4px}
+.hist-pn{font-size:13px;font-weight:700;color:var(--t);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hist-badge{font-size:10px;font-weight:700;padding:2px 8px;border-radius:6px;white-space:nowrap;flex-shrink:0}
+.hist-badge.clean{background:rgba(34,197,94,.15);color:var(--g)}
+.hist-badge.ban3{background:rgba(59,130,246,.15);color:var(--b)}
+.hist-badge.ad{background:rgba(239,68,68,.15);color:var(--r)}
+.hist-badge.incite{background:rgba(249,115,22,.15);color:var(--o)}
+.hist-msg{font-size:12px;color:var(--t2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hist-time{font-size:10px;color:var(--t3);margin-top:3px}
+
+/* Stats tab */
+.stat-refresh{width:100%;padding:10px;background:var(--card);border:1px solid var(--brd);border-radius:10px;color:var(--t);font-family:'Inter',sans-serif;font-size:13px;font-weight:600;cursor:pointer;margin-bottom:12px;transition:opacity .2s}
+.stat-refresh:active{opacity:.7}
+.stat-card{background:var(--card);border:1px solid var(--brd);border-radius:14px;padding:14px 16px;margin-bottom:8px}
+.stat-card h3{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--t3);margin-bottom:8px}
+.stat-val{font-size:24px;font-weight:800;color:var(--t)}
+.stat-val .unit{font-size:14px;font-weight:600;color:var(--t2);margin-left:4px}
+.stat-bar-wrap{margin-top:6px}
+.stat-bar-item{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.stat-bar-label{font-size:12px;font-weight:600;color:var(--t2);width:90px;flex-shrink:0}
+.stat-bar-track{flex:1;height:8px;background:rgba(255,255,255,.05);border-radius:4px;overflow:hidden}
+.stat-bar-fill{height:100%;border-radius:4px;transition:width .6s ease}
+.stat-bar-num{font-size:12px;font-weight:700;color:var(--t);width:50px;text-align:right;flex-shrink:0}
+.stat-empty{text-align:center;color:var(--t3);padding:40px 16px;font-size:13px}
+
+/* Toast */
+.toast{position:fixed;bottom:74px;left:50%;transform:translateX(-50%) translateY(60px);padding:8px 18px;border-radius:10px;font-size:12px;font-weight:600;color:#fff;z-index:1000;transition:transform .25s cubic-bezier(.34,1.56,.64,1);background:rgba(30,40,55,.95);border:1px solid var(--brd);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);white-space:nowrap}
+.toast.show{transform:translateX(-50%) translateY(0)}
+
+::-webkit-scrollbar{width:3px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--card);border-radius:2px}
+</style>
+</head>
+<body>
+
+<div class="hdr">
+    <div class="hdr-l">
+        <div class="logo">⚡</div>
+        <div><h1>MC Remote</h1><div class="sub">Пульт Модератора</div></div>
+        <div id="modCount">Модеров: <b style="color:#fff" id="modCountVal">0</b></div>
+    </div>
+    <div class="st" id="st"><div class="st-d"></div><span id="stT">...</span></div>
+</div>
+
+<div class="tgl">
+    <div class="tgl-l"><span>Заявки</span></div>
+    <button class="tgl-s" id="tglB" onclick="doToggle()"></button>
+</div>
+
+<!-- TAB: Reports -->
+<div class="tab-content active" id="tab-reports">
+    <div class="sec-t">Сообщения <span class="badge" id="cnt">0</span></div>
+    <div class="rpts" id="rptList"></div>
+    <div class="acts">
+        <div class="sec-t">Действия</div>
+        <div class="acts-g">
+            <button class="ab b1" onclick="react('/rd react NO_PUNISH','Чист',event)"><span class="ic">✅</span><span class="lb">Чист</span><span class="sl">Нет нарушения</span></button>
+            <button class="ab b2" onclick="react('/rd react BAN_3_DAYS','Упом',event)"><span class="ic">⚠️</span><span class="lb">Упом</span><span class="sl">Бан 3 дня</span></button>
+            <button class="ab b3" onclick="react('/rd react BAN_93_DAYS','Реклама',event)"><span class="ic">🚫</span><span class="lb">Реклама</span><span class="sl">Бан 93 дня</span></button>
+            <button class="ab b4" onclick="react('/rd react ban_podstrekanie','Подстрек.',event)"><span class="ic">🔥</span><span class="lb">Подстрек.</span><span class="sl">Подстрекание</span></button>
+        </div>
+    </div>
+</div>
+
+<!-- TAB: History -->
+<div class="tab-content" id="tab-history">
+    <div class="sec-t">История действий</div>
+    <div id="histList"></div>
+</div>
+
+<!-- TAB: Stats -->
+<div class="tab-content" id="tab-stats">
+    <button class="stat-refresh" id="statBtn" onclick="getStats()">🔄 Обновить статистику</button>
+    <div id="statsContent"><div class="stat-empty">Нажми кнопку выше для загрузки</div></div>
+</div>
+
+<!-- Bottom Nav -->
+<div class="bnav">
+    <button class="active" onclick="switchTab('reports',this)"><span class="ni">📋</span>Заявки</button>
+    <button onclick="switchTab('history',this)"><span class="ni">📜</span>История</button>
+    <button onclick="switchTab('stats',this)"><span class="ni">📊</span>Стата</button>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const WS_PROTO = location.protocol === 'https:' ? 'wss:' : 'ws:';
+const WSU = WS_PROTO + '//' + location.host + '/web';
+let ws=null,reports=[],history=[],reportsOn=false,rt=null,statsData=null;
+
+function connect(){
+    if(ws&&(ws.readyState===0||ws.readyState===1))return;
+    ws=new WebSocket(WSU);
+    ws.onopen=()=>{setSt(true);if(rt){clearTimeout(rt);rt=null}};
+    ws.onmessage=e=>{try{handle(JSON.parse(e.data))}catch(x){}};
+    ws.onclose=()=>{setSt(false);recon()};
+    ws.onerror=()=>{setSt(false)};
+}
+function recon(){if(rt)return;rt=setTimeout(()=>{rt=null;connect()},2500)}
+
+function handle(d){
+    if(d.type==='init'){
+        reports=d.reports||[];reportsOn=d.reportsEnabled||false;history=d.history||[];
+        updTgl();renderRpts();renderHist();
+    }else if(d.type==='new_report'){
+        reports.unshift(d.data);renderRpts();
+        if(navigator.vibrate)navigator.vibrate([100,50,100]);
+    }else if(d.type==='toggle'){
+        reportsOn=d.enabled;updTgl();
+    }else if(d.type==='status'){
+        setSt(d.status==='connected');
+    }else if(d.type==='command_ack'){
+        toast('✓ Отправлено');
+    }else if(d.type==='history_entry'){
+        history.unshift(d.data);renderHist();
+    }else if(d.type==='stats_data'){
+        parseStats(d.lines||[]);
+    }else if(d.type==='mod_count'){
+        document.getElementById('modCount').style.display='inline-block';
+        document.getElementById('modCountVal').textContent=d.count;
+    }
+}
+
+function setSt(on){document.getElementById('st').className='st'+(on?' on':'');document.getElementById('stT').textContent=on?'Онлайн':'Оффлайн'}
+function updTgl(){document.getElementById('tglB').className='tgl-s'+(reportsOn?' on':'')}
+
+// === Reports ===
+function renderRpts(){
+    const l=document.getElementById('rptList'),c=document.getElementById('cnt');
+    const uh=reports.filter(r=>!r.handled).length;c.textContent=uh;
+    if(!reports.length){l.innerHTML='<div class="no-r"><div class="no-r-i">📭</div>Нет заявок</div>';return}
+    l.innerHTML=reports.map((r,i)=>{
+        const t=new Date(r.timestamp).toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+        const sk='https://mc-heads.net/avatar/'+encodeURIComponent(r.playerName)+'/32';
+        return '<div class="rpt'+(r.handled?' done':'')+'" onclick="copyNick(\\''+esc(r.playerName)+'\\',this)">'+
+            '<div class="copy-toast">Скопировано!</div>'+
+            '<div class="pr"><img class="av" src="'+sk+'" alt="" onerror="this.style.display=\\'none\\'">'+
+            '<div><div class="pn">'+esc(r.playerName)+'</div><div class="rt">'+t+'</div></div></div>'+
+            '<div class="rm">'+r.playerMessage+'</div></div>';
+    }).join('');
+}
+
+function copyNick(name,el){
+    navigator.clipboard.writeText(name).then(()=>{
+        const ct=el.querySelector('.copy-toast');
+        ct.classList.add('show');
+        setTimeout(()=>ct.classList.remove('show'),1200);
+    }).catch(()=>{});
+}
+
+// === Actions ===
+function react(cmd,label,ev){
+    ripple(ev);
+    if(!ws||ws.readyState!==1){toast('❌ Нет подключения');return}
+    const first=reports.findIndex(r=>!r.handled);
+    let pn='',pm='';
+    if(first!==-1){pn=reports[first].playerName;pm=reports[first].playerMessage;reports[first].handled=true;renderRpts()}
+    ws.send(JSON.stringify({action:'react',command:cmd,actionLabel:label,playerName:pn,playerMessage:pm}));
+    if(navigator.vibrate)navigator.vibrate(40);
+}
+
+function doToggle(){
+    if(!ws||ws.readyState!==1){toast('❌ Нет подключения');return}
+    ws.send(JSON.stringify({action:'command',command:'/rd toggle'}));
+    reportsOn=!reportsOn;updTgl();
+    toast(reportsOn?'📥 Включено':'📤 Выключено');
+    if(navigator.vibrate)navigator.vibrate(40);
+}
+
+// === History ===
+function renderHist(){
+    const l=document.getElementById('histList');
+    if(!history.length){l.innerHTML='<div class="no-r"><div class="no-r-i">📜</div>Нет истории</div>';return}
+    l.innerHTML=history.map(h=>{
+        const t=new Date(h.timestamp).toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'});
+        const d=new Date(h.timestamp).toLocaleDateString('ru-RU',{day:'2-digit',month:'2-digit'});
+        const sk='https://mc-heads.net/avatar/'+encodeURIComponent(h.playerName)+'/28';
+        let bc='clean',bl=h.actionLabel||'';
+        if(h.action&&h.action.includes('BAN_3'))bc='ban3';
+        else if(h.action&&h.action.includes('BAN_93'))bc='ad';
+        else if(h.action&&h.action.includes('podstrekanie'))bc='incite';
+        return '<div class="hist-item">'+
+            '<img class="hist-av" src="'+sk+'" alt="" onerror="this.style.display=\\'none\\'">'+
+            '<div class="hist-info"><div class="hist-top"><span class="hist-pn">'+esc(h.playerName)+'</span>'+
+            '<span class="hist-badge '+bc+'">'+esc(bl)+'</span></div>'+
+            '<div class="hist-msg">'+h.playerMessage+'</div>'+
+            '<div class="hist-time">'+d+' '+t+'</div></div></div>';
+    }).join('');
+}
+
+// === Stats ===
+function getStats(){
+    if(!ws||ws.readyState!==1){toast('❌ Нет подключения');return}
+    document.getElementById('statBtn').textContent='⏳ Загрузка...';
+    ws.send(JSON.stringify({action:'get_stats'}));
+    setTimeout(()=>{document.getElementById('statBtn').textContent='🔄 Обновить статистику'},5000);
+}
+
+function parseStats(lines){
+    document.getElementById('statBtn').textContent='🔄 Обновить статистику';
+    let earned='',penalty='',group='',allTimeTotal=0,periodTotal=0;
+    let allTime={},period={};let section='';
+    for(const raw of lines){
+        const l=raw.trim();
+        if(l.includes('Заработано:'))earned=l.replace(/.*Заработано:\s*/,'');
+        else if(l.includes('Штраф:'))penalty=l.replace(/.*Штраф:\s*/,'')||'Нет';
+        else if(l.includes('Группа:'))group=l.replace(/.*Группа:\s*/,'');
+        else if(l.includes('За всё время и последний период')){section='all';const m=l.match(/всего\s+(\d+)/);if(m)allTimeTotal=parseInt(m[1])}
+        else if(l.includes('Только за последний период')){section='period';const m=l.match(/всего\s+(\d+)/);if(m)periodTotal=parseInt(m[1])}
+        else if(l.match(/^-\s*.+\s+\d+/)){
+            const m=l.match(/^-\s*(.+?)\s+(\d+)/);
+            if(m){if(section==='all')allTime[m[1]]=parseInt(m[2]);else if(section==='period')period[m[1]]=parseInt(m[2])}
+        }
+    }
+    const c=document.getElementById('statsContent');
+    if(!earned&&!group&&Object.keys(allTime).length===0){c.innerHTML='<div class="stat-empty">Не удалось загрузить. Попробуй ещё раз.</div>';return}
+
+    let html='';
+    // Info cards
+    html+='<div class="stat-card"><h3>💰 Заработано</h3><div class="stat-val">'+esc(earned)+'</div></div>';
+    if(penalty&&penalty!=='Нет')html+='<div class="stat-card"><h3>⚠️ Штраф</h3><div class="stat-val" style="color:var(--r)">'+esc(penalty)+'</div></div>';
+    html+='<div class="stat-card"><h3>👤 Группа</h3><div class="stat-val" style="font-size:16px">'+esc(group)+'</div></div>';
+
+    // All time bars
+    if(Object.keys(allTime).length){
+        html+='<div class="stat-card"><h3>📊 За всё время <span style="color:var(--t2);font-weight:500">('+allTimeTotal+')</span></h3><div class="stat-bar-wrap">';
+        const mx=Math.max(...Object.values(allTime),1);
+        const colors={'Чист':'var(--g)','Упом':'var(--b)','Реклама':'var(--r)','Подстрекание':'var(--o)','Игноры':'var(--t3)'};
+        for(const[k,v]of Object.entries(allTime)){
+            const pct=Math.round(v/mx*100);const col=colors[k]||'var(--p)';
+            html+='<div class="stat-bar-item"><span class="stat-bar-label">'+esc(k)+'</span>'+
+                '<div class="stat-bar-track"><div class="stat-bar-fill" style="width:'+pct+'%;background:'+col+'"></div></div>'+
+                '<span class="stat-bar-num">'+v+'</span></div>';
+        }
+        html+='</div></div>';
+    }
+
+    // Period bars
+    if(Object.keys(period).length){
+        html+='<div class="stat-card"><h3>📅 За период <span style="color:var(--t2);font-weight:500">('+periodTotal+')</span></h3><div class="stat-bar-wrap">';
+        const mx=Math.max(...Object.values(period),1);
+        const colors={'Чист':'var(--g)','Упом':'var(--b)','Реклама':'var(--r)','Подстрекание':'var(--o)','Игноры':'var(--t3)'};
+        for(const[k,v]of Object.entries(period)){
+            const pct=Math.round(v/mx*100);const col=colors[k]||'var(--p)';
+            html+='<div class="stat-bar-item"><span class="stat-bar-label">'+esc(k)+'</span>'+
+                '<div class="stat-bar-track"><div class="stat-bar-fill" style="width:'+pct+'%;background:'+col+'"></div></div>'+
+                '<span class="stat-bar-num">'+v+'</span></div>';
+        }
+        html+='</div></div>';
+    }
+    c.innerHTML=html;
+}
+
+// === Tabs ===
+function switchTab(name,btn){
+    document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
+    document.getElementById('tab-'+name).classList.add('active');
+    document.querySelectorAll('.bnav button').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+}
+
+// === Util ===
+function esc(s){const d=document.createElement('div');d.textContent=s;return d.innerHTML}
+function ripple(ev){const b=ev.currentTarget,r=document.createElement('span');r.classList.add('rip');const rc=b.getBoundingClientRect();const x=(ev.touches?ev.touches[0].clientX:ev.clientX)-rc.left;const y=(ev.touches?ev.touches[0].clientY:ev.clientY)-rc.top;const sz=Math.max(rc.width,rc.height);r.style.width=r.style.height=sz+'px';r.style.left=(x-sz/2)+'px';r.style.top=(y-sz/2)+'px';b.appendChild(r);setTimeout(()=>r.remove(),500)}
+function toast(m){const t=document.getElementById('toast');t.textContent=m;t.className='toast show';setTimeout(()=>t.classList.remove('show'),2000)}
+
+connect();
+document.addEventListener('dblclick',e=>e.preventDefault());
+</script>
+</body>
+</html>
