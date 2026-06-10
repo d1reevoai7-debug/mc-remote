@@ -17,7 +17,8 @@ let cache = {
   reportsEnabled: false,
   reports: [],
   history: [],
-  modCount: 0
+  modCount: 0,
+  bossbar: null
 };
 
 wss.on('connection', (ws, req) => {
@@ -57,6 +58,9 @@ wss.on('connection', (ws, req) => {
              entry.proofUrl = data.url;
              broadcastToWeb(strMsg);
           }
+        } else if (data.type === 'bossbar_sync') {
+          cache.bossbar = { title: data.title, percent: data.percent };
+          broadcastToWeb(strMsg);
         }
       } catch (e) {
         console.error('Error parsing mod message', e);
@@ -94,6 +98,15 @@ wss.on('connection', (ws, req) => {
       ws.send(JSON.stringify({
         type: 'mod_count',
         count: cache.modCount
+      }));
+    }
+
+    // 4. Send cached bossbar if active
+    if (cache.bossbar && cache.bossbar.title) {
+      ws.send(JSON.stringify({
+        type: 'bossbar_sync',
+        title: cache.bossbar.title,
+        percent: cache.bossbar.percent
       }));
     }
     

@@ -119,6 +119,16 @@ body{font-family:'Inter',-apple-system,sans-serif;background:var(--bg);color:var
 .proof-modal img{max-width:95%;max-height:85%;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.5);object-fit:contain}
 .proof-close{position:absolute;top:20px;right:20px;background:rgba(255,255,255,.2);color:#fff;border:none;width:36px;height:36px;border-radius:50%;font-size:20px;display:flex;align-items:center;justify-content:center;cursor:pointer}
 
+/* Bossbar timer */
+.bossbar{position:sticky;top:0;z-index:101;height:0;overflow:hidden;transition:height .3s ease}
+.bossbar.active{height:36px}
+.bossbar-bg{height:100%;background:var(--bg2);border-bottom:1px solid var(--brd);display:flex;align-items:center;padding:0 14px;gap:10px}
+.bossbar-track{flex:1;height:10px;background:rgba(255,255,255,.06);border-radius:5px;overflow:hidden;position:relative}
+.bossbar-fill{height:100%;border-radius:5px;transition:width .4s linear,background .4s;min-width:0}
+.bossbar-text{font-size:11px;font-weight:700;color:var(--t2);white-space:nowrap;flex-shrink:0;min-width:30px;text-align:right}
+.bossbar-icon{font-size:14px;flex-shrink:0;animation:bossbarPulse 1.5s ease-in-out infinite}
+@keyframes bossbarPulse{0%,100%{opacity:1}50%{opacity:.5}}
+
 ::-webkit-scrollbar{width:3px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--card);border-radius:2px}
 </style>
 </head>
@@ -131,6 +141,15 @@ body{font-family:'Inter',-apple-system,sans-serif;background:var(--bg);color:var
         <div id="modCount">Модеров: <b style="color:#fff" id="modCountVal">0</b></div>
     </div>
     <div class="st" id="st"><div class="st-d"></div><span id="stT">...</span></div>
+</div>
+
+<!-- Bossbar Timer -->
+<div class="bossbar" id="bossbar">
+    <div class="bossbar-bg">
+        <span class="bossbar-icon">⏱️</span>
+        <div class="bossbar-track"><div class="bossbar-fill" id="bossbarFill"></div></div>
+        <span class="bossbar-text" id="bossbarText">0%</span>
+    </div>
 </div>
 
 <div class="tgl">
@@ -215,6 +234,14 @@ function handle(d){
     }else if(d.type==='mod_count'){
         document.getElementById('modCount').style.display='inline-block';
         document.getElementById('modCountVal').textContent=d.count;
+    }else if(d.type==='photo_proof'){
+        const entry = history.find(h => h.playerName === d.playerName);
+        if (entry) {
+            entry.proofUrl = d.url;
+            renderHist();
+        }
+    }else if(d.type==='bossbar_sync'){
+        updateBossbar(d.title, d.percent);
     }
 }
 
@@ -371,6 +398,30 @@ function switchTab(name,btn){
 function esc(s){const d=document.createElement('div');d.textContent=s;return d.innerHTML}
 function ripple(ev){const b=ev.currentTarget,r=document.createElement('span');r.classList.add('rip');const rc=b.getBoundingClientRect();const x=(ev.touches?ev.touches[0].clientX:ev.clientX)-rc.left;const y=(ev.touches?ev.touches[0].clientY:ev.clientY)-rc.top;const sz=Math.max(rc.width,rc.height);r.style.width=r.style.height=sz+'px';r.style.left=(x-sz/2)+'px';r.style.top=(y-sz/2)+'px';b.appendChild(r);setTimeout(()=>r.remove(),500)}
 function toast(m){const t=document.getElementById('toast');t.textContent=m;t.className='toast show';setTimeout(()=>t.classList.remove('show'),2000)}
+
+// === Bossbar ===
+function updateBossbar(title, percent) {
+    const bar = document.getElementById('bossbar');
+    const fill = document.getElementById('bossbarFill');
+    const txt = document.getElementById('bossbarText');
+    if (!title || title === '') {
+        bar.classList.remove('active');
+        return;
+    }
+    bar.classList.add('active');
+    const pct = Math.max(0, Math.min(100, Math.round(percent * 100)));
+    fill.style.width = pct + '%';
+    // Color: green > yellow > red as time decreases
+    let color;
+    if (percent > 0.5) {
+        color = `hsl(${120 * (percent - 0.5) * 2}, 80%, 50%)`; // green to yellow
+    } else {
+        color = `hsl(${60 * percent * 2}, 80%, 50%)`; // yellow to red
+    }
+    fill.style.background = color;
+    txt.textContent = pct + '%';
+    txt.style.color = color;
+}
 
 connect();
 document.addEventListener('dblclick',e=>e.preventDefault());
