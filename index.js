@@ -51,6 +51,12 @@ wss.on('connection', (ws, req) => {
         } else if (data.type === 'mod_count') {
           cache.modCount = data.count;
           broadcastToWeb(strMsg);
+        } else if (data.type === 'photo_proof') {
+          const entry = cache.history.find(h => h.playerName === data.playerName);
+          if (entry) {
+             entry.proofUrl = data.url;
+             broadcastToWeb(strMsg);
+          }
         }
       } catch (e) {
         console.error('Error parsing mod message', e);

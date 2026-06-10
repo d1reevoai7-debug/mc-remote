@@ -112,6 +112,13 @@ body{font-family:'Inter',-apple-system,sans-serif;background:var(--bg);color:var
 .toast{position:fixed;bottom:74px;left:50%;transform:translateX(-50%) translateY(60px);padding:8px 18px;border-radius:10px;font-size:12px;font-weight:600;color:#fff;z-index:1000;transition:transform .25s cubic-bezier(.34,1.56,.64,1);background:rgba(30,40,55,.95);border:1px solid var(--brd);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);white-space:nowrap}
 .toast.show{transform:translateX(-50%) translateY(0)}
 
+/* Proof Modal */
+.proof-btn{margin-left:8px;padding:2px 6px;border-radius:4px;background:var(--p);color:#fff;border:none;font-size:9px;font-weight:700;cursor:pointer}
+.proof-modal{position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:9999;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s;backdrop-filter:blur(4px)}
+.proof-modal.show{opacity:1;pointer-events:auto}
+.proof-modal img{max-width:95%;max-height:85%;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.5);object-fit:contain}
+.proof-close{position:absolute;top:20px;right:20px;background:rgba(255,255,255,.2);color:#fff;border:none;width:36px;height:36px;border-radius:50%;font-size:20px;display:flex;align-items:center;justify-content:center;cursor:pointer}
+
 ::-webkit-scrollbar{width:3px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--card);border-radius:2px}
 </style>
 </head>
@@ -166,6 +173,12 @@ body{font-family:'Inter',-apple-system,sans-serif;background:var(--bg);color:var
 </div>
 
 <div class="toast" id="toast"></div>
+
+<!-- Proof Modal -->
+<div class="proof-modal" id="proofModal" onclick="closeProof()">
+    <button class="proof-close">✕</button>
+    <img id="proofImg" src="" alt="Proof" onclick="event.stopPropagation()">
+</div>
 
 <script>
 const WS_PROTO = location.protocol === 'https:' ? 'wss:' : 'ws:';
@@ -263,13 +276,24 @@ function renderHist(){
         if(h.action&&h.action.includes('BAN_3'))bc='ban3';
         else if(h.action&&h.action.includes('BAN_93'))bc='ad';
         else if(h.action&&h.action.includes('podstrekanie'))bc='incite';
+        let proofHtml = h.proofUrl ? `<button class="proof-btn" onclick="openProof('${h.proofUrl}')">📸 Пруф</button>` : '';
         return '<div class="hist-item">'+
             '<img class="hist-av" src="'+sk+'" alt="" onerror="this.style.display=\'none\'">'+
             '<div class="hist-info"><div class="hist-top"><span class="hist-pn">'+esc(h.playerName)+'</span>'+
             '<span class="hist-badge '+bc+'">'+esc(bl)+'</span></div>'+
             '<div class="hist-msg">'+h.playerMessage+'</div>'+
-            '<div class="hist-time">'+d+' '+t+'</div></div></div>';
+            '<div class="hist-time">'+d+' '+t+proofHtml+'</div></div></div>';
     }).join('');
+}
+
+function openProof(url) {
+    const modal = document.getElementById('proofModal');
+    const img = document.getElementById('proofImg');
+    img.src = url;
+    modal.classList.add('show');
+}
+function closeProof() {
+    document.getElementById('proofModal').classList.remove('show');
 }
 
 // === Stats ===
